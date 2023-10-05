@@ -1,5 +1,5 @@
 # confetti
-Highlight lot's of different words like it's a party
+Highlight lots of words like it's a party!
 
 
 # Installation
