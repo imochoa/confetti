@@ -1,5 +1,5 @@
 # confetti
-Highlight lots of words like it's a party!
+Highlight lots of words like it's a party
 
 
 # Installation
@@ -16,16 +16,16 @@ return {
       {
         "<leader>*",
         function()
-          require("confetti").highlight_word_under_cursor()
+          require("confetti").highlight_at_cursor()
         end,
-        desc = "highlight_word_under_cursor",
+        desc = "Highlight at cursor",
       },
       {
         "<leader>**",
         function()
           require("confetti").clear_highlights()
         end,
-        desc = "clear it",
+        desc = "Clear all confetti highlights",
       },
     },
   },
