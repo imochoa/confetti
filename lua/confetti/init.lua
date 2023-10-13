@@ -7,7 +7,7 @@ local hllogic = require("confetti.hllogic")
 --[[
 Private cache
 --]]
-local custom_hl_groups = {}
+local new_hlgroups = {}
 local usable_hl_groups = {}
 local current_hl_group_idx = 1
 
@@ -45,6 +45,7 @@ M.highlight_at_cursor = function()
 	end
 
 	local hl_group = next_hl_group()
+	vim.notify("Using: " .. hl_group, constants.log_level)
 
 	-- Go through priorities
 	if hllogic.visual_selection(hl_group) ~= nil then
@@ -57,8 +58,6 @@ M.highlight_at_cursor = function()
 		P("patttern approach passed")
 	end
 end
--- TODO: remove
-M.highlight_word_under_cursor = M.highlight_at_cursor
 
 --[[
 Clear highlights in the module-specific namespace
@@ -66,6 +65,10 @@ Clear highlights in the module-specific namespace
 M.clear_highlights = function()
 	vim.api.nvim_buf_clear_namespace(0, constants.ns_id, 0, -1)
 end
+
+---@class ConfettiConfig
+---@field reused_hlgroups string[] List of existing highlight groups to use
+---@field colors GuiHighlight[] New highlights to create with a lua interface
 
 --[[
 Setup function
@@ -76,51 +79,41 @@ Setup function
 TODO: add types config :Config?
 --]]
 M.setup = function(config)
-	-- Reset current config
-	utils.remove_hl_groups(custom_hl_groups or {})
-	custom_hl_groups = {}
-	usable_hl_groups = {}
+	-- Reset
+	utils.remove_hl_groups(new_hlgroups or {})
+	new_hlgroups = {}
 
-	-- Load
-	config = config or {}
+	-- handle nil
+	config = config == nil and {} or config
+	config.reused_hlgroups = config.reused_hlgroups == nil and {} or config.reused_hlgroups
+	config.colors = config.colors == nil and {} or config.colors
+	-- handle empty
+	config.colors = #config.colors == 0 and constants.default_colors or config.colors
 
-	local hl_groups = config.hl_groups or constants.defaultHLGroups
-	if hl_groups == nil or #hl_groups == 0 then
-		vim.notify("No hl_groups specified!", vim.log.levels.ERROR)
-		return nil
-	end
-
-	local custom_hex_colors = {}
-	local existing_hl_groups = {}
-	for _, el in ipairs(hl_groups) do
-		if type(el) ~= "string" or #el == 0 then
-			vim.notify("Ignoring invalid input: <" .. tostring(el) .. ">", vim.log.levels.ERROR)
-		elseif el:sub(1, 1):lower() == "#" then
-			-- Was a color!
-			table.insert(custom_hex_colors, el)
-		elseif constants.nvim_global_hl_groups[el] ~= nil then
+	-- Existing groups?
+	local reused_hlgroups = {}
+	for _, el in ipairs(config.reused_hlgroups) do
+		if constants.nvim_global_hl_groups[el] ~= nil then
 			-- Was an existing highlight group
-			table.insert(existing_hl_groups, el)
-		else
-			vim.notify("Ignoring unknown color/highlight group: <" .. el .. ">", vim.log.levels.ERROR)
+			table.insert(reused_hlgroups, el)
 		end
 	end
+	table.sort(reused_hlgroups)
 
-	-- Create new hl groups and remember their names
-	table.sort(custom_hex_colors)
-	custom_hl_groups = utils.create_new_hl_groups(custom_hex_colors)
+	-- New groups?
+	new_hlgroups = utils.create_hl_groups(config.colors)
 
 	-- Concat valid & new hl groups
-	table.sort(existing_hl_groups)
-	usable_hl_groups = {}
-	for _, value in pairs(existing_hl_groups) do
-		table.insert(usable_hl_groups, value)
-	end
-	for _, value in pairs(custom_hl_groups) do
-		table.insert(usable_hl_groups, value)
+	usable_hl_groups = reused_hlgroups
+	for _, v in pairs(new_hlgroups) do
+		table.insert(usable_hl_groups, v)
 	end
 
-	if usable_hl_groups == nil or #usable_hl_groups == 0 then
+	if #usable_hl_groups == 0 then
+		P("why tho")
+		P(config)
+		P(usable_hl_groups)
+		P(new_hlgroups)
 		vim.notify("No hl_groups to use!", vim.log.levels.ERROR)
 		return nil
 	end
