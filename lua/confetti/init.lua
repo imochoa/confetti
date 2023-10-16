@@ -114,10 +114,6 @@ M.setup = function(config)
 	end
 
 	if #usable_hl_groups == 0 then
-		P("why tho")
-		P(config)
-		P(usable_hl_groups)
-		P(new_hlgroups)
 		vim.notify("No hl_groups to use!", vim.log.levels.ERROR)
 		return nil
 	end
