@@ -10,6 +10,7 @@ Private cache
 local new_hlgroups = {}
 local usable_hl_groups = {}
 local current_hl_group_idx = 1
+local _fwd_config = {} -- For debugging
 
 --[[
 Private Functions
@@ -31,6 +32,8 @@ Reload this module (for debugging)
 --]]
 M.reload = function()
 	require("plenary.reload").reload_module("confetti")
+	require("confetti").setup(_fwd_config)
+	-- TODO: need to store more cache: current idx, usable hl_groups, new_hlgroups
 	vim.notify("Reloaded Confetti")
 end
 
@@ -80,6 +83,7 @@ TODO: add types config :Config?
 --]]
 M.setup = function(config)
 	-- Reset
+	_fwd_config = config
 	utils.remove_hl_groups(new_hlgroups or {})
 	new_hlgroups = {}
 
