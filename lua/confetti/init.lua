@@ -21,7 +21,6 @@ Get the next hl group and update the global tracker
 --]]
 ---@return string hl_group
 local next_hl_group = function()
-	--@return string
 	local hl_group = usable_hl_groups[current_hl_group_idx]
 	current_hl_group_idx = current_hl_group_idx % #usable_hl_groups + 1
 	return hl_group
@@ -51,14 +50,10 @@ M.highlight_at_cursor = function()
 	vim.notify("Using: " .. hl_group, constants.log_level)
 
 	-- Go through priorities
-	if hllogic.visual_selection(hl_group) ~= nil then
-		P("visual selection passed")
-	elseif hllogic.treesitter(hl_group) ~= nil then
-		P("treesitter approach passed")
+	if hllogic.visual_selection(hl_group) then
+	elseif hllogic.treesitter(hl_group) then
 	else
-		-- Base case
 		hllogic.cword_pattern(hl_group)
-		P("patttern approach passed")
 	end
 end
 

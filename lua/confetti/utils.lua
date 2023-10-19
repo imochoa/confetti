@@ -77,8 +77,6 @@ M.create_hl_groups = function(colors)
 		end
 
 		-- create it
-		vim.notify("Running " .. cmd_str)
-		P(cmd_str)
 		vim.cmd(cmd_str)
 	end
 
