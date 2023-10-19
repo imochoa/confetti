@@ -50,6 +50,61 @@ local highlight_pattern = function(regexp, text, hl_group)
 end
 
 --[[
+default highlighting logic, should always work
+Only works on 1 line!
+Using both regexp matching to find lines and literal text in lua...
+
+    vim.fn.search -> search for pattern, return line number. 'n' flag to not move cursor
+    vim.fn.getline -> get contents of line
+    vim.fn.matchlist -> search for pattern in String, return list of matches, using capture groups
+
+    # EXAMPLE
+    local defaults = vim.fn.matchlist(vim.fn.getline(vim.fn.search('^defaults:', 'n')), '^defaults:\\s*\\(.*\\)$')[2]
+    defaults = defaults and ' -d '..defaults or ''
+
+    vim.bo.makeprg = 'pandoc' .. defaults .. ' -o "%:p:r.pdf" "%:p"'
+    vim.bo.errorformat = '%f, line %l: %m' -- TODO
+
+--]]
+---@param regexp string Regular expression for vim.fn.searchpos
+---@param text string Literal text that we're trying to detect in the buffer
+---@param hl_group string
+---@return boolean ok it work?
+local hl_with_pattern_search = function(regexp, hl_group)
+	local cursor_pos = vim.api.nvim_win_get_cursor(constants.window) -- remember cursor position
+	-- TODO: remember and recover visible screen?
+
+	vim.notify("Pattern: <" .. regexp .. ">", constants.log_level)
+	vim.api.nvim_win_set_cursor(0, { 1, 0 })
+
+	local line_txt
+	local start, final
+	local lnum, col = 1, 0
+	-- local dont_wrap = "W"
+	-- 'n'	do Not move the cursor
+	-- 'W'	don't Wrap around the end of the file
+	local search_flags = "W"
+	while (lnum > 0) or (col > 0) do
+		lnum, col = unpack(vim.fn.searchpos(regexp, search_flags))
+		line_txt = vim.fn.getline(lnum)
+		final = 0
+		while final ~= -1 do
+			_, start, final = unpack(vim.fn.matchstrpos(line_txt, regexp, start))
+			if start ~= -1 and final ~= -1 then
+				P("Line, start,final")
+				P({ lnum, start, final })
+				vim.api.nvim_buf_add_highlight(0, constants.ns_id, hl_group, lnum - 1, start, final)
+				start = final
+			end
+		end
+		vim.api.nvim_win_set_cursor(0, { lnum + 1, 0 })
+	end
+	-- Recover cursor position
+	vim.api.nvim_win_set_cursor(constants.window, cursor_pos)
+	return true
+end
+
+--[[
 Visual selection
 --]]
 ---@param hl_group string
@@ -102,7 +157,8 @@ M.visual_selection = function(hl_group)
 	end
 	P("Visual selection: <" .. text .. ">")
 	local regexp = text
-	return highlight_pattern(regexp, text, hl_group)
+	-- return highlight_pattern(regexp, text, hl_group)
+	return hl_with_pattern_search(regexp, hl_group)
 end
 
 --[[
@@ -113,12 +169,16 @@ default highlighting logic, should always work
 ---@param hl_group string
 ---@return boolean
 M.cword_pattern = function(hl_group)
-	---@type current_word string
+	---@type string
 	local current_word = vim.call("expand", "<cword>") ---@diagnostic disable-line: param-type-mismatch,assign-type-mismatch
 	P("Current word: <" .. current_word .. ">")
-	local regexp = current_word .. ""
+	-- local regexp = "\\W\\zs" .. current_word .. "\\ze\\W"
+	-- local regexp = "\\s\\zs" .. current_word .. "\\ze\\s"
+	-- But it will still miss vi followed by the punctuation or at the end of the line/file. The right way is to put special word boundary symbols "\<" and "\>" around vi.
+	-- s:\<vi\>:VIM:g
+	local regexp = "\\<" .. current_word .. "\\>"
 	P("regexp: <" .. regexp .. ">")
-	return highlight_pattern(regexp, current_word, hl_group)
+	return hl_with_pattern_search(regexp, hl_group)
 end
 
 --[[
@@ -128,8 +188,6 @@ Function to bind
 ---@return boolean
 M.treesitter = function(hl_group)
 	-- attempt to get the language tree
-	local current_word = vim.call("expand", "<cword>") ---@diagnostic disable-line: param-type-mismatch
-
 	local language_tree = nil
 	local status, _ = pcall(function()
 		language_tree = vim.treesitter.get_parser()

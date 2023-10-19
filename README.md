@@ -31,3 +31,13 @@ return {
   },
 }
 ```
+
+## Logic
+```mermaid
+flowchart LR
+    A[highlight at cursor] --> B{In visual\nmode?}
+    B -->|Yes| C[hoho]
+    B -->|No| D{Treesiter\nActive?}
+    D -->|Yes| E[Use symbol at cursor]
+    D -->|No| F[Use cword]
+```
