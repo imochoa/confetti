@@ -16,43 +16,6 @@ local jobs = {} -- Keep track of what has been highlighted
 default highlighting logic, should always work
 Only works on 1 line!
 Using both regexp matching to find lines and literal text in lua...
---]]
----@param regexp string Regular expression for vim.fn.searchpos
----@param text string Literal text that we're trying to detect in the buffer
----@param hl_group string
----@return boolean ok it work?
-local highlight_pattern = function(regexp, text, hl_group)
-	local cursor_pos = vim.api.nvim_win_get_cursor(constants.window) -- remember cursor position
-	-- TODO: remember and recover visible screen?
-
-	vim.notify("Pattern: <" .. regexp .. ">", constants.log_level)
-	vim.api.nvim_win_set_cursor(constants.window, { 1, 0 })
-
-	local line_txt
-	local start, final
-	local lnum, col = 1, 0
-	local dont_wrap = "W"
-	while (lnum > 0) or (col > 0) do
-		lnum, col = unpack(vim.fn.searchpos(regexp, dont_wrap)) --, stopline?, timeout?, skip?))
-		line_txt = vim.fn.getline(lnum)
-		final = 0
-		while final ~= nil do
-			start, final, _ = line_txt:find(text, final)
-			if start ~= nil and final ~= nil then
-				-- https://fossies.org/linux/neovim/runtime/lua/vim/highlight.lua
-				vim.api.nvim_buf_add_highlight(0, constants.ns_id, hl_group, lnum - 1, start - 1, final)
-			end
-		end
-	end
-	-- Recover cursor position
-	vim.api.nvim_win_set_cursor(constants.window, cursor_pos)
-	return true
-end
-
---[[
-default highlighting logic, should always work
-Only works on 1 line!
-Using both regexp matching to find lines and literal text in lua...
 
     vim.fn.search -> search for pattern, return line number. 'n' flag to not move cursor
     vim.fn.getline -> get contents of line
@@ -67,7 +30,6 @@ Using both regexp matching to find lines and literal text in lua...
 
 --]]
 ---@param regexp string Regular expression for vim.fn.searchpos
----@param text string Literal text that we're trying to detect in the buffer
 ---@param hl_group string
 ---@return boolean ok it work?
 local hl_with_pattern_search = function(regexp, hl_group)
@@ -157,7 +119,6 @@ M.visual_selection = function(hl_group)
 	end
 	P("Visual selection: <" .. text .. ">")
 	local regexp = text
-	-- return highlight_pattern(regexp, text, hl_group)
 	return hl_with_pattern_search(regexp, hl_group)
 end
 
