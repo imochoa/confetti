@@ -2,6 +2,41 @@ local M = {}
 
 local constants = require("confetti.constants")
 
+--[[
+
+https://forum.rainmeter.net/viewtopic.php?t=29419
+--]]
+---@param hex string e.g. #rrggbb or #rgb
+---@return number,number,number rgb as (0-255) integers
+local hex2rgb = function(hex)
+	hex = hex:gsub("#", "")
+	local r, g, b = 0, 0, 0
+	if string.len(hex) == 3 then
+		r = tonumber("0x0" .. hex:sub(1, 1))
+		g = tonumber("0x0" .. hex:sub(2, 2))
+		b = tonumber("0x0" .. hex:sub(3, 3))
+	elseif string.len(hex) == 6 then
+		r = tonumber("0x" .. hex:sub(1, 2))
+		g = tonumber("0x" .. hex:sub(3, 4))
+		b = tonumber("0x" .. hex:sub(5, 6))
+	end
+	return r, g, b
+end
+
+--[[
+
+https://stackoverflow.com/questions/12043187/how-to-check-if-hex-color-is-too-black
+
+--]]
+---@param hex string
+---@return boolean is_light
+local is_hex_light = function(hex)
+	P(hex)
+	local r, g, b = hex2rgb(hex)
+	P({ r, g, b })
+	return (r * 299 + g * 587 + b * 114) > 155000
+end
+
 -- There are two types of UIs for highlighting:
 -- cterm	terminal UI (|TUI|)
 -- gui	GUI or RGB-capable TUI ('termguicolors')
@@ -53,15 +88,32 @@ M.create_hl_groups = function(colors)
 		-- values
 		local cmd_str = "highlight " .. n .. " "
 
+		-- Default background?
+		if #(c.guibg or "") == 0 then
+			c.guibg = "#ffff00" -- yellow
+		end
+
+		vim.notify(c.guibg, constants.log_level)
+		vim.notify(c.guibg:sub(1, 1), constants.log_level)
+		vim.notify(c.guifg, constants.log_level)
+		-- Default text color? (only works on hex strings)
+		if #(c.guifg or "") == 0 then
+			if c.guibg:sub(1, 1) == "#" then
+				c.guifg = is_hex_light(c.guibg) and "#000000" or "#ffffff"
+			else
+				c.guifg = "#000000"
+			end
+		end
+		vim.notify(c.guifg, constants.log_level)
+
 		-- prepare command
-		--TODO: default fg?
 		if #(c.guifg or "") ~= 0 then
 			cmd_str = cmd_str .. "guifg=" .. c.guifg .. " "
 		end
-		--TODO: default bg?
 		if #(c.guibg or "") ~= 0 then
 			cmd_str = cmd_str .. "guibg=" .. c.guibg .. " "
 		end
+
 		local gui_args = ""
 		for _, f in pairs(gui_fields) do
 			if c[f] or false then

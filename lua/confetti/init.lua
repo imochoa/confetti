@@ -7,6 +7,8 @@ local hllogic = require("confetti.hllogic")
 --[[
 Private cache
 --]]
+---@type Job[]
+local jobs = {} -- Keep track of what has been highlighted
 local new_hlgroups = {}
 local usable_hl_groups = {}
 local current_hl_group_idx = 1
@@ -50,10 +52,22 @@ M.highlight_at_cursor = function()
 	vim.notify("Using: " .. hl_group, constants.log_level)
 
 	-- Go through priorities
-	if hllogic.visual_selection(hl_group) then
-	elseif hllogic.treesitter(hl_group) then
+	-- (1) Visual selection?
+	local job = hllogic.visual_selection(hl_group)
+	if job == nil then
+		-- (2) treesitter?
+		job = hllogic.treesitter(hl_group)
+		if job == nil then
+			-- (3) Word under cursor?
+			job = hllogic.cword(hl_group)
+		end
+	end
+
+	if job ~= nil then
+		table.insert(jobs, job)
+		vim.notify("Tracked jobs:" .. vim.inspect(jobs), constants.log_level)
 	else
-		hllogic.cword_pattern(hl_group)
+		vim.notify("No highlighting method passed", vim.log.levels.WARN)
 	end
 end
 
@@ -61,6 +75,7 @@ end
 Clear highlights in the module-specific namespace
 --]]
 M.clear_highlights = function()
+	jobs = {}
 	vim.api.nvim_buf_clear_namespace(0, constants.ns_id, 0, -1)
 end
 
@@ -79,6 +94,7 @@ TODO: add types config :Config?
 M.setup = function(config)
 	-- Reset
 	_fwd_config = config
+	jobs = {}
 	utils.remove_hl_groups(new_hlgroups or {})
 	new_hlgroups = {}
 
