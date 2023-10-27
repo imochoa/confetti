@@ -31,9 +31,7 @@ https://stackoverflow.com/questions/12043187/how-to-check-if-hex-color-is-too-bl
 ---@param hex string
 ---@return boolean is_light
 local is_hex_light = function(hex)
-	P(hex)
 	local r, g, b = hex2rgb(hex)
-	P({ r, g, b })
 	return (r * 299 + g * 587 + b * 114) > 155000
 end
 
@@ -83,7 +81,7 @@ M.create_hl_groups = function(colors)
 		-- name
 		local n = "ConfettiHLGroup" .. i
 		table.insert(names, n)
-		vim.notify("Creating " .. n, constants.log_level)
+		constants.log("Creating " .. n)
 
 		-- values
 		local cmd_str = "highlight " .. n .. " "
@@ -93,9 +91,6 @@ M.create_hl_groups = function(colors)
 			c.guibg = "#ffff00" -- yellow
 		end
 
-		vim.notify(c.guibg, constants.log_level)
-		vim.notify(c.guibg:sub(1, 1), constants.log_level)
-		vim.notify(c.guifg, constants.log_level)
 		-- Default text color? (only works on hex strings)
 		if #(c.guifg or "") == 0 then
 			if c.guibg:sub(1, 1) == "#" then
@@ -104,7 +99,6 @@ M.create_hl_groups = function(colors)
 				c.guifg = "#000000"
 			end
 		end
-		vim.notify(c.guifg, constants.log_level)
 
 		-- prepare command
 		if #(c.guifg or "") ~= 0 then

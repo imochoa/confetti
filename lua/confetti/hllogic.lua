@@ -34,7 +34,7 @@ local hl_with_pattern_search = function(regexp, hl_group)
 	local cursor_pos = vim.api.nvim_win_get_cursor(0) -- remember cursor position
 	-- TODO: remember and recover visible screen?
 
-	vim.notify("Pattern: <" .. regexp .. ">", constants.log_level)
+	constants.log("Pattern: <" .. regexp .. ">")
 	vim.api.nvim_win_set_cursor(0, { 1, 0 })
 
 	local line_txt
@@ -51,8 +51,6 @@ local hl_with_pattern_search = function(regexp, hl_group)
 		while final ~= -1 do
 			_, start, final = unpack(vim.fn.matchstrpos(line_txt, regexp, start))
 			if start ~= -1 and final ~= -1 then
-				-- P("Line, start,final")
-				-- P({ lnum, start, final })
 				vim.api.nvim_buf_add_highlight(0, constants.ns_id, hl_group, lnum - 1, start, final)
 				start = final
 			end
@@ -80,7 +78,6 @@ M.visual_selection = function(hl_group)
 	local _, line1, col1, _ = unpack(vim.fn.getpos("v"))
 	local _, line2, col2, _ = unpack(vim.fn.getpos("."))
 	-- Looks good actually, but could use cursor_pos?
-	-- local end_line, end_col = unpack(P(vim.api.nvim_win_get_cursor(0)))
 
 	-- Do we need to sort?
 	if line1 >= line2 and col1 > col2 then
@@ -89,11 +86,7 @@ M.visual_selection = function(hl_group)
 		line2, col2 = unpack({ auxl, auxc })
 	end
 	-- local tt = vim.api.nvim_buf_get_text(0, ls-1, cs-1, le-1, ce, {})
-	-- local start_line, start_col = unpack(P(vim.api.nvim_buf_get_mark(0, "<"))) -- no workee
 	--
-	-- local end_line, end_col = unpack(P(vim.api.nvim_buf_get_mark(0, "'")))
-	-- P(end_line)
-	-- P(end_col)
 	-- Use the line locations to retrieve the text in the selection/range.
 	-- The result is a table (array) containing one element for each line
 
@@ -107,15 +100,13 @@ M.visual_selection = function(hl_group)
 		text = text .. buffer_text_tbl[1]
 	end
 	-- local selected_lines = vim.api.nvim_buf_get_lines(0, line1 - 1, end_line, true)
-	-- P(selected_lines)
 	-- local selected_text = table.concat(selected_lines, "\n")
-	-- P(selected_text)
 	-- TODO: trim?
 	-- vim.fn.trim(text, mask?, dir?)
 	if #text == 0 then
 		return nil
 	end
-	vim.notify("Visual selection: <" .. text .. ">", constants.log_level)
+	constants.log("Visual selection: <" .. text .. ">")
 	local regexp = text
 	if hl_with_pattern_search(regexp, hl_group) then
 		return { fcn = hl_with_pattern_search, args = { regexp, hl_group } }
@@ -133,13 +124,13 @@ default highlighting logic, should always work
 M.cword = function(hl_group)
 	---@type string
 	local current_word = vim.call("expand", "<cword>") ---@diagnostic disable-line: param-type-mismatch,assign-type-mismatch
-	vim.notify("Current word: <" .. current_word .. ">", constants.log_level)
+	constants.log("Current word: <" .. current_word .. ">")
 	-- local regexp = "\\W\\zs" .. current_word .. "\\ze\\W"
 	-- local regexp = "\\s\\zs" .. current_word .. "\\ze\\s"
 	-- But it will still miss vi followed by the punctuation or at the end of the line/file. The right way is to put special word boundary symbols "\<" and "\>" around vi.
 	-- s:\<vi\>:VIM:g
 	local regexp = "\\<" .. current_word .. "\\>"
-	vim.notify("regexp: <" .. regexp .. ">", constants.log_level)
+	constants.log("regexp: <" .. regexp .. ">")
 	if hl_with_pattern_search(regexp, hl_group) then
 		return { fcn = hl_with_pattern_search, args = { regexp, hl_group } }
 	end
@@ -149,33 +140,35 @@ end
 --[[
 TODO: input?
 --]]
+---@param node_text string
 ---@param hl_group string
 ---@return boolean ok
-local hl_with_treesitter = function(hl_group)
-	local language_tree = nil
+local hl_with_treesitter = function(node_text, hl_group)
+	local parser = nil
 	local status, _ = pcall(function()
-		language_tree = vim.treesitter.get_parser()
+		parser = vim.treesitter.get_parser()
 	end)
 
 	if status == false then
 		return false
 	end
 
-	local syntax_tree = language_tree:parse()
-	local root = syntax_tree[1]:root()
-
-	local lang = language_tree:lang()
-	local curr_node = ts_utils.get_node_at_cursor()
-	local node_text = vim.treesitter.get_node_text(curr_node, 0)
-	local query_text = string.format('((identifier) @cword (#eq? @cword "%s"))', node_text)
+	local tree = parser:parse()[1]
+	if not tree then
+		return false
+	end
+	local lang = parser:lang()
+	if not lang then
+		return false
+	end
+	-- local curr_node = ts_utils.get_node_at_cursor()
+	-- local node_text = vim.treesitter.get_node_text(curr_node, 0)
+	local query_text = string.format('((identifier) @node_txt (#eq? @node_txt "%s"))', node_text)
 	local query = vim.treesitter.query.parse(lang, query_text)
 
 	local m = false
-	for pattern, match, metadata in query:iter_matches(root, 0) do
-		-- P("outer")
-		-- P({ match = getmetatable(match) })
+	for pattern, match, metadata in query:iter_matches(tree:root(), 0) do
 		for id, node in pairs(match) do
-			-- P("inner")
 			-- local type = node:type() -- type of the captured node
 			local row1, col1, row2, col2 = node:range() -- range of the capture
 			vim.api.nvim_buf_add_highlight(0, constants.ns_id, hl_group, row1, col1, col2)
@@ -191,9 +184,16 @@ Function to bind
 ---@param hl_group string
 ---@return Job?
 M.treesitter = function(hl_group)
-	--TODO: incorrect args to call this again
-	if hl_with_treesitter(hl_group) then
-		return { fcn = hl_with_treesitter, args = { hl_group } }
+	local node_text = nil
+	local status, _ = pcall(function()
+		node_text = vim.treesitter.get_node_text(ts_utils.get_node_at_cursor(), 0)
+	end)
+	if not node_text then
+		return nil
+	end
+
+	if hl_with_treesitter(node_text, hl_group) then
+		return { fcn = hl_with_treesitter, args = { node_text, hl_group } }
 	end
 	return nil
 end

@@ -1,12 +1,9 @@
 local M = {}
 
 M.ns_id = vim.api.nvim_create_namespace("ConfettiHighlights") -- highlight group for this plugin
-M.window = 0 -- this window
-M.buffer = 0 -- this buffer
 M.nvim_global_hl_groups = vim.api.nvim_get_hl(0, {}) -- Known highlight groups
 M.log_level = vim.log.levels.DEBUG
 -- M.log_level = vim.log.levels.INFO
--- TODO: set default fgcolor to white/black depending on current text color?
 -- M.default_colors = {
 -- 	{ guifg = "black", guibg = "white" },
 -- 	{ guifg = "black", guibg = "magenta", altfont = true },
@@ -21,8 +18,10 @@ M.log_level = vim.log.levels.DEBUG
 -- 	{ guifg = "black", guibg = "acqua", underdouble = true },
 -- 	{ guifg = "black", guibg = "hotpink", underline = true },
 -- }
+M.log = function(txt)
+	vim.notify(vim.inspect(txt), vim.log.levels.log_level)
+end
 M.default_colors = {
-	{ guibg = "white" },
 	{ guibg = "#ebac23" },
 	{ guibg = "#b80058" },
 	{ guibg = "#008cf9" },

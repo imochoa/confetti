@@ -44,12 +44,13 @@ Function to bind
 M.highlight_at_cursor = function()
 	if #(usable_hl_groups or {}) == 0 then
 		-- setup() has not been called or did not create hl groups! Use the defaults
-		vim.notify("Performing default setup...", constants.log_level)
+		constants.log("Performing default setup...")
+
 		M.setup()
 	end
 
 	local hl_group = next_hl_group()
-	vim.notify("Using: " .. hl_group, constants.log_level)
+	constants.log("Using: " .. hl_group)
 
 	-- Go through priorities
 	-- (1) Visual selection?
@@ -65,7 +66,7 @@ M.highlight_at_cursor = function()
 
 	if job ~= nil then
 		table.insert(jobs, job)
-		vim.notify("Tracked jobs:" .. vim.inspect(jobs), constants.log_level)
+		constants.log("Tracked jobs:" .. vim.inspect(jobs))
 	else
 		vim.notify("No highlighting method passed", vim.log.levels.WARN)
 	end
@@ -99,11 +100,11 @@ M.setup = function(config)
 	new_hlgroups = {}
 
 	-- handle nil
-	config = config == nil and {} or config
-	config.reused_hlgroups = config.reused_hlgroups == nil and {} or config.reused_hlgroups
-	config.colors = config.colors == nil and {} or config.colors
+	config = (config == nil) and {} or config
+	config.reused_hlgroups = (config.reused_hlgroups == nil) and {} or config.reused_hlgroups
+	config.colors = (config.colors == nil) and {} or config.colors
 	-- handle empty
-	config.colors = #config.colors == 0 and constants.default_colors or config.colors
+	config.colors = (#config.colors == 0) and constants.default_colors or config.colors
 
 	-- Existing groups?
 	local reused_hlgroups = {}
@@ -129,7 +130,7 @@ M.setup = function(config)
 		return nil
 	end
 
-	vim.notify("Using the following HL groups: " .. vim.inspect(usable_hl_groups), constants.log_level)
+	constants.log("Using the following HL groups: " .. vim.inspect(usable_hl_groups))
 	return M
 end
 
