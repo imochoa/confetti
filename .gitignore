@@ -39,3 +39,17 @@ luac.out
 *.x86_64
 *.hex
 
+# Development tools
+.luacheckcache
+.stylua.toml.bak
+
+# IDE/Editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Testing
+/tmp/
