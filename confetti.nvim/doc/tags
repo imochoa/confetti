@@ -1,0 +1,6 @@
+stackmap.nvim	confetti.txt	/*stackmap.nvim*
+stackmap.nvim	highlight.txt	/*stackmap.nvim*
+stackmap.pop()	confetti.txt	/*stackmap.pop()*
+stackmap.pop()	highlight.txt	/*stackmap.pop()*
+stackmap.push()	confetti.txt	/*stackmap.push()*
+stackmap.push()	highlight.txt	/*stackmap.push()*
