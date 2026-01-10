@@ -1,1 +1,3 @@
 deps
+tests/screenshots/*
+!tests/screenshots/.keep
