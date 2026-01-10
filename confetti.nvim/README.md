@@ -2,6 +2,13 @@
 
 Highlight lots of words like it's a party
 
+# Dev
+
+`<leader>uI`
+`<leader>ui`
+:EditQuery
+:help compl-omni)
+
 # Installation
 
 ## Using LazyVim

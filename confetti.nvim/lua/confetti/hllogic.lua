@@ -1,7 +1,8 @@
 local M = {}
 
 local constants = require("confetti.constants")
-local ts_utils = require("nvim-treesitter.ts_utils")
+
+-- local ts_utils = require("nvim-treesitter.ts_utils")
 
 ---@class Job More info with 'help: highlight', 'help: highlight-args'
 ---@field fcn function what to call
@@ -168,11 +169,18 @@ local hl_with_treesitter = function(node_text, hl_group)
 
 	local m = false
 	for pattern, match, metadata in query:iter_matches(tree:root(), 0) do
-		for id, node in pairs(match) do
-			-- local type = node:type() -- type of the captured node
-			local row1, col1, row2, col2 = node:range() -- range of the capture
-			vim.api.nvim_buf_add_highlight(0, constants.ns_id, hl_group, row1, col1, col2)
-			m = true
+		for id, nodes in ipairs(match) do
+			local name = query.captures[id]
+			-- `node` was captured by the `name` capture in the match
+			for _, node in ipairs(nodes) do
+				local node_data = metadata[id] -- Node level metadata
+				-- ... use the info here ...
+				-- local type = node:type() -- type of the captured node
+				vim.print(node_data)
+				local row1, col1, row2, col2 = node:range() -- range of the capture
+				vim.api.nvim_buf_add_highlight(0, constants.ns_id, hl_group, row1, col1, col2)
+				m = true
+			end
 		end
 	end
 	return m
@@ -186,7 +194,8 @@ Function to bind
 M.treesitter = function(hl_group)
 	local node_text = nil
 	local status, _ = pcall(function()
-		node_text = vim.treesitter.get_node_text(ts_utils.get_node_at_cursor(), 0)
+		node_text = vim.treesitter.get_node_text(vim.treesitter.get_node({}), 0)
+		-- node_text = vim.treesitter.get_node_text(ts_utils.get_node_at_cursor(), 0)
 	end)
 	if not node_text then
 		return nil
