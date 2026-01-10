@@ -1,5 +1,4 @@
 set positional-arguments := true
-
 set shell := ["bash", "-euco", "pipefail"]
 
 [no-cd]
@@ -10,9 +9,20 @@ fmt-just:
     @just --fmt --unstable
 
 setup:
-  printf "mini.nvim & tests"
-  mkdir -p deps
-  git clone --filter=blob:none https://github.com/nvim-mini/mini.nvim deps/mini.nvim
+    printf "mini.nvim & tests"
+    mkdir -p deps
+    git clone --filter=blob:none https://github.com/nvim-mini/mini.nvim deps/mini.nvim
 
+# -git clone --filter=blob:none https://github.com/nvim-mini/mini.nvim # $@
+
+# Run all test files
 test:
-	nvim --headless --noplugin -u scripts/minimal_init.vim -c "PlenaryBustedDirectory tests/ { minimal_init = './scripts/minimal_init.vim' }"
+    # nvim --headless --noplugin -u scripts/minimal_init.vim -c "PlenaryBustedDirectory tests/ { minimal_init = './scripts/minimal_init.vim' }"
+    nvim --headless --noplugin -u "./scripts/headless_init.lua" -c "lua MiniTest.run()"
+    # nvim --headless --noplugin --cmd ":luafile ./scripts/minimal_init.lua" # --cmd "echo hoho"
+
+# Run test from file at `$FILE` environment variable
+test_file:
+    nvim --headless --noplugin -u ./scripts/minimal_init.lua -c "lua MiniTest.run_file('./tests/test_basics.lua')"
+    # nvim --headless --noplugin -u ./scripts/minimal_init.lua -c "lua MiniTest.run_file('.tests/minitest.lua')"
+    # nvim --headless --noplugin -u ./scripts/minimal_init.lua -c "lua MiniTest.run_file('$(FILE)')"
