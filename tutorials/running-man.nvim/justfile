@@ -1,0 +1,13 @@
+set positional-arguments := true
+
+set shell := ["bash", "-euco", "pipefail"]
+
+[no-cd]
+_default:
+    @just --list --list-submodules
+
+fmt-just:
+    @just --fmt --unstable
+
+test:
+	nvim --headless --noplugin -u scripts/minimal_init.vim -c "PlenaryBustedDirectory tests/ { minimal_init = './scripts/minimal_init.vim' }"
