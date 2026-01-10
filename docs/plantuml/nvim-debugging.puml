@@ -1,0 +1,33 @@
+@startuml nvim-dap
+' https://github.com/jbyuki/one-small-step-for-vimkind/blob/main/doc/osv.txt
+
+title https://github.com/jbyuki/one-small-step-for-vimkind/blob/main/doc/osv.txt
+|#palegreen|A| nvim Instance A
+start
+:open A;
+:Launch DAP server
+:lua require"osv".launch({port=8086});
+
+|#gold|B| nvim Instance B
+|B|
+:open B;
+:open myscript.lua;
+
+:place breakpoint
+:lua require"dap".toggle_breakpoint();
+:<leader>db;
+
+:Attach DAP client to server
+:lua require"dap".continue();
+:<leader>dc;
+
+|A|
+:run myscript.lua
+:luafile myscript.lua
+:luafile % -- (current file);
+
+|B|
+:breakpoint hits and freezes instance;
+stop
+
+@enduml
