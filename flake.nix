@@ -3,13 +3,10 @@
 
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixpkgs-unstable";
-
     # flake-parts.url = "github:hercules-ci/flake-parts";
-
     # pre-commit-hooks = {
     #   url = "github:cachix/pre-commit-hooks.nix";
     # };
-
     # neorocks = {
     #   url = "github:nvim-neorocks/neorocks";
     # };
@@ -30,13 +27,7 @@
     in
     {
       devShells.${system}.default = pkgs.mkShell {
-        # env vars
-        UV_PYTHON_DOWNLOADS = "never";
-        # packages
-        # lua54Packages ... lua-lsp
         packages = with pkgs; [
-          # python312
-          # uv
           just
           fzf
           lua
@@ -44,7 +35,6 @@
           luarocks
           lua-language-server
           # emmylua-ls
-          # old
           # luacheck
         ];
         # inputsFrom = [
