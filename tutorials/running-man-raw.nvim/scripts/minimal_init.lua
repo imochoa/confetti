@@ -14,7 +14,6 @@ vim.opt.rtp:append(repodir)
 vim.opt.rtp:append(repodir .. "plugin")
 -- vim.cmd([[let &rtp.=','.getcwd()]])
 
--- runtime! plugin/plenary.vim
 -- vim.cmd(string.format("runtime! %s/plugin/loadit.lua", repodir))
 -- vim.cmd(string.format(":luafile %s/plugin/loadit.lua", repodir))
 
@@ -27,4 +26,15 @@ if #vim.api.nvim_list_uis() == 0 then
   vim.opt.rtp:append(repodir .. "deps/mini.nvim")
 
   require("mini.test").setup()
+else
+  print("in UI! set up reload cmds")
+  vim.api.nvim_create_user_command("ReloadRunningMan", function()
+    package.loaded["running-man"] = nil
+    local running_man = require("running-man")
+    running_man.setup({})
+    running_man._develop()
+  end, {})
+
+  print("Setting key combination...")
+  vim.keymap.set("n", "<space><space><space>", "<cmd>ReloadRunningMan<CR>", { desc = "Reload Running Man plugin" })
 end

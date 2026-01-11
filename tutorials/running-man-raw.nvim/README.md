@@ -2,14 +2,15 @@
 - [Plugin 'running-man.nvim'](#plugin-running-mannvim)
   - [Structure](#structure)
   - [Loading](#loading)
-  - [Testing](#testing)
-  - [deps dir](#deps-dir)
-  - [tests dir](#tests-dir)
-  - [Running](#running)
-    - [Interative](#interative)
-    - [Headless](#headless)
+  - [Testing with mini-test](#testing-with-mini-test)
+    - [Setup](#setup)
+    - [Running tests](#running-tests)
+      - [Interative Testing](#interative-testing)
+      - [Headless Testing](#headless-testing)
   - [Debugging](#debugging)
 - [References](#references)
+- [Simplifications](#simplifications)
+  - [Loading using LazyVim](#loading-using-lazyvim)
 <!--toc:end-->
 
 # Plugin 'running-man.nvim'
@@ -19,24 +20,30 @@
 ```
 
 running-man.nvim/
-├── justfile
-├── lua
-│   └── running-man
-│       └── init.lua
-├── plugin
-│   └── loadit.lua
-├── README.md
-├── scripts
-│   └── minimal_init.lua
-└── tests
+    ├── deps
+    │   └── mini.nvim
+    │       ├── ...
+    │       └── ...
+    ├── justfile
+    ├── lua
+    │   └── running-man
+    │       └── init.lua
+    ├── README.md
+    ├── scripts
+    │   ├── headless_init.lua
+    │   └── minimal_init.lua
+    └── tests
+        ├── screenshots
+        │   └── .keep
+        ├── test_in_child.lua
+        ├── test_same_proc.lua
+        └── test_screenshotting.lua
 ```
 
 ## Loading
 
 1. Open [./scripts/minimal_init.lua](./scripts/minimal_init.lua)
-2. Load it`:luafile %`
-    1. it sets the runtimepath (rtp)
-    2. loads [./plugin/loadit.lua](./plugin/loadit.lua) which sets a command and keymap to call `M._deveop()`
+2. Load it`:luafile %` to set runtimepath and set commands and keycombinations
 
 ## Testing with mini-test
 
@@ -96,8 +103,7 @@ Start headless Neovim process with proper startup file and execute lua MiniTest.
 Replaces the need for:
 
 - cloning mini.test `(1)`
-- `./scripts/minimal_init.lua` for editing rtp (2)
-- `./plugin/loadit.lua` (3)
+- `./scripts/minimal_init.lua` for editing rtp and setting cmds (2)
 
 ```lua
 -- .lazy.lua
@@ -108,7 +114,6 @@ return {
   -- For this plugin (2)
  { dir = "/abs/path/to/this/plugin.nvim",
     config = function()
-    -- (3)
     vim.api.nvim_create_user_command("ReloadRunningMan", function()
       package.loaded["running-man"] = nil
       local running_man = require("running-man")
