@@ -7,6 +7,7 @@ M.config = {
 }
 
 --- Setup function that users call
+---@param user_config table Array. Default: { 'world' }.
 ---@return nil
 function M.setup(user_config)
   M.config = vim.tbl_deep_extend("force", M.config, user_config or {})
@@ -24,6 +25,15 @@ end
 ---@return nil
 function M._develop()
   print("developing!")
+end
+
+--- Example function to be tested
+---@param a number
+---@param b number
+---@return number
+function M.add(a, b)
+  print("running M.add()")
+  return a + b
 end
 
 return M

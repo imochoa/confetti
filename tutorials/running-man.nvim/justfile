@@ -5,6 +5,7 @@ set shell := ["bash", "-euco", "pipefail"]
 _default:
     @just --list --list-submodules
 
+[group('ci')]
 fmt-just:
     @just --fmt --unstable
 
@@ -13,16 +14,18 @@ setup:
     mkdir -p deps
     git clone --filter=blob:none https://github.com/nvim-mini/mini.nvim deps/mini.nvim
 
-# -git clone --filter=blob:none https://github.com/nvim-mini/mini.nvim # $@
-
 # Run all test files
-test:
-    # nvim --headless --noplugin -u scripts/minimal_init.vim -c "PlenaryBustedDirectory tests/ { minimal_init = './scripts/minimal_init.vim' }"
+[group('test')]
+test-all:
     nvim --headless --noplugin -u "./scripts/headless_init.lua" -c "lua MiniTest.run()"
-    # nvim --headless --noplugin --cmd ":luafile ./scripts/minimal_init.lua" # --cmd "echo hoho"
 
-# Run test from file at `$FILE` environment variable
-test_file:
-    nvim --headless --noplugin -u ./scripts/minimal_init.lua -c "lua MiniTest.run_file('./tests/test_basics.lua')"
-    # nvim --headless --noplugin -u ./scripts/minimal_init.lua -c "lua MiniTest.run_file('.tests/minitest.lua')"
-    # nvim --headless --noplugin -u ./scripts/minimal_init.lua -c "lua MiniTest.run_file('$(FILE)')"
+# Run test from file at `$FILE` environment variable ????
+[group('test')]
+test-file:
+    nvim --headless --noplugin -u "./scripts/headless_init.lua" -c "lua MiniTest.run_file('./tests/test_same_proc.lua')"
+
+# nvim --headless --noplugin -u "./scripts/headless_init.lua" -c "lua MiniTest.run_file('$(FILE)')"
+#
+# nvim --headless --noplugin -u scripts/minimal_init.vim -c "PlenaryBustedDirectory tests/ { minimal_init = './scripts/minimal_init.vim' }"
+# - `:lua MiniTest.run_file()`
+# nvim --headless --noplugin --cmd ":luafile ./scripts/minimal_init.lua" # --cmd "echo hoho"
