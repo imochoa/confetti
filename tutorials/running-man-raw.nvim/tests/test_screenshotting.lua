@@ -9,7 +9,7 @@ local T = MiniTest.new_set({
     -- This will be executed before every (even nested) case
     pre_case = function()
       -- Restart child process with custom 'init.lua' script
-      child.restart({ "-u", "scripts/headless_init.lua" })
+      child.restart({ "-u", "scripts/init.lua" })
       child.lua([[M = require('running-man')]])
     end,
     post_once = child.stop,
